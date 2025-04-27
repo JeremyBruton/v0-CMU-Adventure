@@ -61,8 +61,21 @@
     "@emotion/is-prop-valid": "latest",
     "immer": "latest",
     "use-sync-external-store": "latest",
+    "jiti": "latest",
+    "less": "latest",
+    "lightningcss": "latest",
+    "sass": "latest",
+    "sass-embedded": "latest",
+    "stylus": "latest",
+    "sugarss": "latest",
+    "terser": "latest",
+    "tsx": "latest",
+    "yaml": "latest",
+    "vite": "latest",
     "framer-motion": "latest",
-    "zustand": "latest"
+    "zustand": "latest",
+    "@vitejs/plugin-react": "latest",
+    "path": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
