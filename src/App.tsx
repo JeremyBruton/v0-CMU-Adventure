@@ -13,16 +13,18 @@ function App() {
   const { day, step, stats, selectedChoice, setStats, nextScene, resetGame, isGameOver } = useGameStore()
   const [gameStarted, setGameStarted] = useState(false)
   const [showCutscene, setShowCutscene] = useState<{ show: boolean; image: string; title: string } | null>(null)
+  const [cutsceneShown, setCutsceneShown] = useState<Record<string, boolean>>({})
 
   // Load game state from localStorage on initial render
   useEffect(() => {
     const savedState = localStorage.getItem("cmuAdventureState")
     if (savedState) {
       try {
-        const { day, step, stats, gameStarted } = JSON.parse(savedState)
+        const { day, step, stats, gameStarted, cutsceneShown } = JSON.parse(savedState)
         setStats(stats)
         useGameStore.setState({ day, step })
         setGameStarted(gameStarted || false)
+        if (cutsceneShown) setCutsceneShown(cutsceneShown)
       } catch (e) {
         console.error("Error parsing saved state:", e)
       }
@@ -31,47 +33,62 @@ function App() {
 
   // Save game state to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("cmuAdventureState", JSON.stringify({ day, step, stats, gameStarted }))
-  }, [day, step, stats, gameStarted])
+    localStorage.setItem(
+      "cmuAdventureState",
+      JSON.stringify({
+        day,
+        step,
+        stats,
+        gameStarted,
+        cutsceneShown,
+      }),
+    )
+  }, [day, step, stats, gameStarted, cutsceneShown])
 
   // Check for cutscene triggers
   useEffect(() => {
+    // Helper function to check and show cutscene
+    const checkAndShowCutscene = (key: string, image: string, title: string) => {
+      if (!cutsceneShown[key]) {
+        setShowCutscene({
+          show: true,
+          image,
+          title,
+        })
+        return true
+      }
+      return false
+    }
+
     // First cutscene - after starting the game
     if (gameStarted && day === "MONDAY" && step === 0 && !showCutscene) {
-      setShowCutscene({
-        show: true,
-        image: "/images/dorm-room.png",
-        title: "Monday Morning - Finals Week Begins",
-      })
+      const key = "monday-morning"
+      if (checkAndShowCutscene(key, "/images/dorm-room.png", "Monday Morning - Finals Week Begins")) {
+        setCutsceneShown((prev) => ({ ...prev, [key]: true }))
+      }
     }
-
     // Tuesday after calculus exam
     else if (day === "TUESDAY" && step === 1 && !showCutscene && !selectedChoice) {
-      setShowCutscene({
-        show: true,
-        image: "/images/calculus-exam.png",
-        title: "Calculus Exam - Baker Hall",
-      })
+      const key = "tuesday-exam"
+      if (checkAndShowCutscene(key, "/images/calculus-exam.png", "Calculus Exam - Baker Hall")) {
+        setCutsceneShown((prev) => ({ ...prev, [key]: true }))
+      }
     }
-
     // After CS project submission
     else if (day === "WEDNESDAY" && step === 2 && !showCutscene && !selectedChoice) {
-      setShowCutscene({
-        show: true,
-        image: "/images/cs-project.png",
-        title: "CS Project Submitted!",
-      })
+      const key = "cs-project"
+      if (checkAndShowCutscene(key, "/images/cs-project.png", "CS Project Submitted!")) {
+        setCutsceneShown((prev) => ({ ...prev, [key]: true }))
+      }
     }
-
     // Thursday night
     else if (day === "THURSDAY" && step === 2 && !showCutscene && !selectedChoice) {
-      setShowCutscene({
-        show: true,
-        image: "/images/night-campus.png",
-        title: "Night Falls Over Campus",
-      })
+      const key = "thursday-night"
+      if (checkAndShowCutscene(key, "/images/night-campus.png", "Night Falls Over Campus")) {
+        setCutsceneShown((prev) => ({ ...prev, [key]: true }))
+      }
     }
-  }, [day, step, gameStarted, showCutscene, selectedChoice])
+  }, [day, step, gameStarted, showCutscene, selectedChoice, cutsceneShown])
 
   // Get current scene based on day and step
   const currentScene = storyData[day]?.[step]
@@ -91,6 +108,12 @@ function App() {
   const handleStartGame = () => {
     resetGame()
     setGameStarted(true)
+    // Reset cutscene tracking when starting a new game
+    setCutsceneShown({})
+  }
+
+  const handleCloseCutscene = () => {
+    setShowCutscene(null)
   }
 
   if (!gameStarted) {
@@ -104,6 +127,7 @@ function App() {
         onRestart={() => {
           resetGame()
           setGameStarted(false)
+          setCutsceneShown({})
         }}
       />
     )
@@ -173,7 +197,7 @@ function App() {
       {/* Cutscene Overlay */}
       <AnimatePresence>
         {showCutscene && showCutscene.show && (
-          <Cutscene imageSrc={showCutscene.image} title={showCutscene.title} onContinue={() => setShowCutscene(null)} />
+          <Cutscene imageSrc={showCutscene.image} title={showCutscene.title} onContinue={handleCloseCutscene} />
         )}
       </AnimatePresence>
     </>
